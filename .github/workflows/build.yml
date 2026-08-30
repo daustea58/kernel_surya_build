@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Setup Environment
         run: |
@@ -56,8 +56,8 @@ jobs:
           echo "CONFIG_KSU=y" >> .config
           echo "CONFIG_KSU_NEXT=y" >> .config
           echo "CONFIG_SUSFS=y" >> .config
-          make O=out olddefconfig
-          make O=out -j$(nproc) CC="$GITHUB_WORKSPACE/toolchain/clang/bin/clang" LD="$GITHUB_WORKSPACE/toolchain/clang/bin/ld.lld" AR="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-ar" NM="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-nm" OBJCOPY="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-objcopy" OBJDUMP="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-objdump" STRIP="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-strip"
+          yes "" | make O=out olddefconfig
+          make O=out -j$(nproc --all) CC="$GITHUB_WORKSPACE/toolchain/clang/bin/clang" LD="$GITHUB_WORKSPACE/toolchain/clang/bin/ld.lld" AR="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-ar" NM="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-nm" OBJCOPY="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-objcopy" OBJDUMP="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-objdump" STRIP="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-strip" KCFLAGS="-fcommon" KCFLAGS_HOST="-fcommon"
 
       - name: Upload Kernel
         uses: actions/upload-artifact@v4
