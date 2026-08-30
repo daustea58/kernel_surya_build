@@ -41,13 +41,9 @@ jobs:
           cd kernel_xiaomi_surya
           export ARCH=arm64
           export SUBARCH=arm64
-          export PATH="$(pwd)/../toolchain/clang/bin:$PATH"
           export CLANG_TRIPLE=aarch64-linux-gnu-
           export CROSS_COMPILE=aarch64-linux-gnu-
           export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
-          export HOSTCC=gcc
-          export HOSTCXX=g++
-          export HOSTLD=ld
           make O=out vendor/atoll_defconfig
           cd out
           echo "CONFIG_MODULES=y" >> .config
@@ -61,7 +57,7 @@ jobs:
           echo "CONFIG_KSU_NEXT=y" >> .config
           echo "CONFIG_SUSFS=y" >> .config
           make O=out olddefconfig
-          make O=out -j$(nproc) CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
+          make O=out -j$(nproc) CC="$GITHUB_WORKSPACE/toolchain/clang/bin/clang" LD="$GITHUB_WORKSPACE/toolchain/clang/bin/ld.lld" AR="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-ar" NM="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-nm" OBJCOPY="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-objcopy" OBJDUMP="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-objdump" STRIP="$GITHUB_WORKSPACE/toolchain/clang/bin/llvm-strip"
 
       - name: Upload Kernel
         uses: actions/upload-artifact@v4
