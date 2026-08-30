@@ -45,6 +45,9 @@ jobs:
           export CLANG_TRIPLE=aarch64-linux-gnu-
           export CROSS_COMPILE=aarch64-linux-gnu-
           export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          export HOSTCC=gcc
+          export HOSTCXX=g++
+          export HOSTLD=ld
           make O=out vendor/atoll_defconfig
           cd out
           echo "CONFIG_MODULES=y" >> .config
