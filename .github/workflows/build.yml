@@ -26,7 +26,7 @@ jobs:
       - name: Setup KernelSU Next
         run: |
           cd kernel_xiaomi_surya
-          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/main/kernel/setup.sh" | bash -
+          git clone --depth=1 https://github.com/rifsxd/KernelSU-Next.git KernelSU
 
       - name: Setup SUSFS
         run: |
