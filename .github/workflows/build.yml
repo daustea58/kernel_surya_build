@@ -1,0 +1,69 @@
+name: Build Kernel Surya
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-simple-perl zip unzip tar
+
+      - name: Clone Kernel Source
+        run: |
+          git clone --depth=1 https://github.com/MiCode/Xiaomi_Kernel_OpenSource.git -b surya-q-oss kernel_xiaomi_surya
+
+      - name: Download Toolchain
+        run: |
+          mkdir -p toolchain
+          cd toolchain
+          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git clang
+          cd ..
+
+      - name: Setup KernelSU Next
+        run: |
+          cd kernel_xiaomi_surya
+          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/main/kernel/setup.sh" | bash -
+
+      - name: Setup SUSFS
+        run: |
+          cd kernel_xiaomi_surya
+          git clone --depth=1 https://gitlab.com/simonpunk/susfs4ksu.git SUSFS
+          patch -p1 < SUSFS/kernel_patches/50_add_susfs_in_kernel-4.14.patch --forward --reject-file=-
+          cp SUSFS/kernel_patches/include/linux/susfs.h include/linux/
+
+      - name: Build Kernel
+        run: |
+          cd kernel_xiaomi_surya
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export PATH="$(pwd)/../toolchain/clang/bin:$PATH"
+          export CLANG_TRIPLE=aarch64-linux-gnu-
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          make O=out vendor/atoll_defconfig
+          cd out
+          echo "CONFIG_MODULES=y" >> .config
+          echo "CONFIG_MODULE_FORCE_LOAD=y" >> .config
+          echo "CONFIG_MODULE_UNLOAD=y" >> .config
+          echo "CONFIG_MODULE_FORCE_UNLOAD=y" >> .config
+          echo "CONFIG_MODULE_SIG=n" >> .config
+          echo "CONFIG_MODULE_SIG_FORCE=n" >> .config
+          echo "CONFIG_MODULE_SIG_ALL=n" >> .config
+          echo "CONFIG_KSU=y" >> .config
+          echo "CONFIG_KSU_NEXT=y" >> .config
+          echo "CONFIG_SUSFS=y" >> .config
+          make O=out olddefconfig
+          make O=out -j$(nproc) CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
+
+      - name: Upload Kernel
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-surya-ksu-susfs
+          path: |
+            kernel_xiaomi_surya/out/arch/arm64/boot/Image.gz-dtb
+            kernel_xiaomi_surya/out/arch/arm64/boot/dtbo.img
+            kernel_xiaomi_surya/out/arch/arm64/boot/dts/qcom/*.dtb
